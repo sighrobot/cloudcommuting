@@ -22,7 +22,6 @@ to setup
     set launch-rate2 random-float 0.11 + 0.01
     ;;set bikes-docked (bikes-docked + max-open-docks - open-docks)
     set color green
-    
   ]
   
   reset-ticks
@@ -46,7 +45,6 @@ to go
     ;; arrived at target
       ifelse distance target < 1 [
         
-        
         ifelse target-open? [
          ask target [ set open-docks open-docks - 1 ]
          move-to target
@@ -67,12 +65,15 @@ to go
     if random-float 1.0 <= launch-rate2 [
       if open-docks < max-open-docks [
        hatch-bikes 1 [
-          set target one-of stations with [open-docks > 0]
+          set prev-target target
+          set target one-of other stations
+          
           ifelse target != nobody [set target-valid? true] [set target-valid? false ]
           face target
           set speed random-float 0.3 + 0.1
-          set color random 255
+          set color white
           set label ""
+         
        ]
        set open-docks open-docks + 1
       ]
@@ -81,6 +82,9 @@ to go
     [ set label (word (max-open-docks - open-docks) " bikes / " (open-docks) " docks / " precision (launch-rate2 * 100) 1 "%" ) ]
     [ set label "" ]
    ifelse open-docks > 0 [ set color green ] [ set color red ]
+   if open-docks = max-open-docks [set color blue]
+   
+   
    
    ;;set bikes-docked (bikes-docked + max-open-docks - open-docks)
    
@@ -93,9 +97,9 @@ GRAPHICS-WINDOW
 258
 10
 1268
-492
+609
 25
-11
+14
 19.61
 1
 10
@@ -108,8 +112,8 @@ GRAPHICS-WINDOW
 1
 -25
 25
--11
-11
+-14
+14
 1
 1
 1
@@ -176,24 +180,6 @@ show-counts?
 1
 -1000
 
-PLOT
-258
-492
-1259
-612
-plot 1
-time
-count
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"bikes in motion" 1.0 0 -5825686 true "" "plot count turtles"
-
 MONITOR
 8
 159
@@ -231,19 +217,29 @@ TEXTBOX
 510
 208
 547
-Green = open docks
+Green = balanced
 18
 64.0
 1
 
 TEXTBOX
 26
-550
+541
 255
-589
+580
 Red = no open docks
 18
 15.0
+1
+
+TEXTBOX
+26
+575
+176
+597
+Blue = no bikes
+18
+104.0
 1
 
 @#$#@#$#@
