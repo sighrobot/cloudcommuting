@@ -1,7 +1,7 @@
 ;; Citi Bike simulator v2
 ;; by Abe Rubenstein
 
-;; self, myself
+;; check out self + myself
 
 breed [bikes bike]
 bikes-own [
@@ -132,9 +132,10 @@ to go
   
   
  tick
-  
 end
 
+; String parsing code by Jim Lyons of netlogo-users Yahoo! Group
+; http://netlogo-users.18673.x6.nabble.com/Reading-in-an-Excel-CSV-file-to-Netlogo-td4870465.html
 to read-station-data
   if not file-at-end? [
    let $csv file-read-line  ; test string 
@@ -146,9 +147,7 @@ to read-station-data
      carefully [set $item read-from-string $item][] ; convert if number 
      set $data lput $item $data  ; append to list 
      set $csv substring $csv ($x + 1) length $csv  ; remove item and comma 
-   ] 
-   ;write $data 
-   ;print ""  ; newline in CC
+   ]
   ]
 end 
 @#$#@#$#@
