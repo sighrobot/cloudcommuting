@@ -154,10 +154,10 @@ end
 GRAPHICS-WINDOW
 271
 10
-1407
-1549
-29
-39
+834
+976
+14
+24
 19.1
 1
 10
@@ -168,10 +168,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--29
-29
--39
-39
+-14
+14
+-24
+24
 1
 1
 1
@@ -282,26 +282,18 @@ SWITCH
 104
 show-bikes?
 show-bikes?
-0
+1
 1
 -1000
 
 @#$#@#$#@
-## WHAT IS IT?
+## Citi Bike simulator v2.0
 
-This code example demonstrates how to have a turtle approach a target location a step at a time.
-
-## HOW IT WORKS
-
-The `people` breed has a variable called `target`, which holds the agent the person is moving towards.
-
-The `face` command points the person towards the target.  `fd` moves the person.  `distance` measures the distance to the target.
-
-When a person reaches their target, they pick a random new target.
-
-## THINGS TO NOTICE
-
-On some computers, the model may run too quickly for you to see that the "people" are taking small steps toward their target. Use the speed slider to slow the model down and watch the people move step by step.
+Created by Abe Rubenstein, T.K. Broderick, and Aaron Arntz
+Cloudcommuting: Rethinking Urban Mobility-on-Demand Systems
+Instructor: Dimitris Papanikolaou
+Interactive Telecommunications Program
+New York University
 @#$#@#$#@
 default
 true
