@@ -1,7 +1,7 @@
-;; Citi Bike simulator v2
-;; by Abe Rubenstein
+; Citi Bike simulator v2
+; by Abe Rubenstein
 
-;; check out self + myself
+; check out self + myself
 
 breed [bikes bike]
 bikes-own [
@@ -71,7 +71,7 @@ to go
     
     ifelse show-bikes? [set color 1 ] [ set color black ]
     
-    ;; if at target, choose a new random target
+    ; if at target, choose a new random target
     if target = nobody or not target-valid? [
       set target one-of stations
       if target != nobody [ set target-valid? true]
@@ -82,7 +82,7 @@ to go
     ask target [ 
          if available-docks > 0 [ set target-open? true ]
         ]
-    ;; arrived at target
+    ; arrived at target
       ifelse distance target < 1 [
         
         ifelse target-open? [
@@ -93,11 +93,11 @@ to go
          move-to target
          die
         ]
-        [  ] ;; wait
+        [  ] ; wait
         
        
       ]
-      ;; not yet at target, move forward
+      ; not yet at target, move forward
       [ fd speed ]
     ]
       
