@@ -215,7 +215,7 @@ NIL
 SWITCH
 50
 111
-204
+186
 144
 show-counts?
 show-counts?
@@ -223,57 +223,35 @@ show-counts?
 1
 -1000
 
-MONITOR
-132
-160
-241
-205
-# open stations
-count stations with [available-docks > 0 ]
-1
-1
-11
-
 TEXTBOX
-31
-253
-213
-290
-Green = balanced
+20
+234
+202
+271
+Green: Balanced
 18
 64.0
 1
 
 TEXTBOX
-31
-284
-260
-323
-Red = no open docks
+21
+288
+250
+327
+Red: >95% full
 18
 15.0
 1
 
 TEXTBOX
-31
-318
-181
-340
-Blue = no bikes
+20
+339
+170
+361
+Blue: <5% full
 18
 104.0
 1
-
-MONITOR
-19
-158
-93
-203
-# stations
-count stations
-1
-1
-11
 
 SWITCH
 53
@@ -285,6 +263,39 @@ show-bikes?
 1
 1
 -1000
+
+MONITOR
+19
+167
+115
+212
+# bikes active
+count bikes
+1
+1
+11
+
+MONITOR
+162
+327
+253
+372
+# blue stations
+count stations with [available-docks < (total-docks * 0.05)]
+1
+1
+11
+
+MONITOR
+162
+275
+254
+320
+# red stations
+count stations with [available-bikes > (total-docks * 0.95)]
+1
+1
+11
 
 @#$#@#$#@
 ## Citi Bike simulator v2.0
