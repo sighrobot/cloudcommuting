@@ -1,19 +1,19 @@
-; Citi Bike simulator v2
+; Citi Bike simulator v3
 ; by Abe Rubenstein
 
 ; check out self + myself
 
-breed [bikes bike]
+extensions [ table ]
+breed [ bikes bike ]
 bikes-own [
   target
-  prev-target
   speed
   target-valid?
+  wait-time
 ]
 
-breed [stations station]
+breed [ stations station ]
 stations-own [
-  launch-rate
   station-id      ; item 0
   $station-name   ; item 1
   available-bikes ; item 8
@@ -22,6 +22,8 @@ stations-own [
   latitude        ; item 4
   longitude       ; item 5
   status-key      ; item 7
+  master-launch-rate
+  launch-table
 ]
 
 globals [
@@ -40,12 +42,13 @@ to setup
   
   file-open "citibike_stations.txt"
   let fl file-read-line
+  print "Loading station data..."
   while [ not file-at-end? ] [
       set $data []
       read-station-data
       if item 7 $data = 1 [ ; only load stations with status key == 1
         create-ordered-stations 1 [
-          set launch-rate random-float 0.11 + 0.01
+          ;set launch-rate random-float 0.11 + 0.01
           set station-id item 0 $data
           set $station-name item 1 $data
           set available-bikes item 8 $data
@@ -60,19 +63,46 @@ to setup
         ]
       ]
   ]
+  print "Station data loaded."
+  
   file-close
+  
+  print "Loading master launch rates..."
   file-open "launch_rates.txt"
   set fl file-read-line
   while [ not file-at-end? ] [
     set $data []
     read-station-data
-    let a 0
     ifelse station item 0 $data = nobody [ ] [
       ask station item 0 $data [
-       set launch-rate item 2 $data / 100
+       set master-launch-rate item 2 $data / 100.0
       ]
     ]
   ]
+  file-close
+  print "Master launch rates loaded."
+
+  print "Loading launch rate data..."
+  ask stations [ 
+    let error-msg word "Error on station id " station-id
+    carefully [
+      file-open (word "endstationdata/" station-id ".csv")
+      set fl file-read-line
+    ] [ print error-msg stop ]
+    
+    ;let t1 table:make
+    ;set launch-rates t1
+    set launch-table []
+    while [ not file-at-end? ] [
+      set $data []
+      read-station-data
+      ;table:put launch-rates item 0 $data item 2 $data
+      repeat (item 1 $data) [
+        set launch-table lput item 0 $data launch-table
+      ]
+    ]
+  ]
+  print "Launch rate data loaded."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
   
   file-close-all
   reset-ticks
@@ -85,67 +115,66 @@ to go
     
     ifelse show-bikes? [set color 1 ] [ set color black ]
     
-    ; if at target, choose a new random target
-    if target = nobody or not target-valid? [
+    if target = nobody [
       set target one-of stations
-      if target != nobody [ set target-valid? true]
+      print "target is nobody"
     ]
     
-    if target-valid? [
+    
     let target-open? false
     ask target [ 
-         if available-docks > 0 [ set target-open? true ]
-        ]
+      if available-docks > 0 [ set target-open? true ]
+    ]
     ; arrived at target
-      ifelse distance target < 1 [
+    ifelse distance target < 1 [
         
-        ifelse target-open? [
-         ask target [
-           set available-docks available-docks - 1
-           set available-bikes available-bikes + 1
-            ]
-         move-to target
-         die
+      ifelse target-open? [
+        ask target [
+          set available-docks available-docks - 1
+          set available-bikes available-bikes + 1
         ]
-        [  ] ; wait
+        move-to target
+        die
+      ]
+      [  ] ; wait
         
        
-      ]
-      ; not yet at target, move forward
-      [ fd speed ]
     ]
-      
+    ; not yet at target, move forward
+    [ fd speed  ]    
   ]
 
   ask stations [
-    if random-float 1.0 <= launch-rate [
-      if available-docks < total-docks [
-       hatch-bikes 1 [
-          
-          set prev-target target
-          set target one-of other stations
-          
-          ifelse target != nobody [set target-valid? true] [set target-valid? false ]
-          face target
-          set speed random-float 0.3 + 0.1
-          set color black
-          set label ""
-         
-       ]
-       set available-docks available-docks + 1
-       set available-bikes available-bikes - 1
+    
+    if available-bikes > 0 [
+      if random-float 1 < master-launch-rate [
+        hatch-bikes 1 [
+          set target one-of stations with [ station-id = one-of launch-table ]
+          if target != nobody [
+            if target = myself [
+              set heading 180
+              jump 40
+            ]
+            face target
+            set speed 0.4
+            set color black
+            set label ""
+          ]
+        ]
+        set available-docks available-docks + 1
+        set available-bikes available-bikes - 1
       ]
     ]
-   ifelse show-counts?
-    [ set label (word (available-bikes) " bikes / " (available-docks) " docks / " precision (launch-rate * 100) 1 "%" ) ]
+    ifelse show-counts?
+    [ set label (word (available-bikes) " bikes / " (available-docks) " docks") ]
     [ set label "" ]
     set color green
-   if available-docks < (total-docks * 0.05) [ set color blue ]
-   if available-bikes > (total-docks * 0.95) [ set color red ]
- ]
+    let capacity available-docks + available-bikes
+    if available-docks > (capacity * 0.90) [ set color blue ]
+    if available-bikes > (capacity * 0.90) [ set color red ]
+  ]
   
-  
- tick
+  tick
 end
 
 ; String parsing code by Jim Lyons of netlogo-users Yahoo! Group
@@ -252,7 +281,7 @@ TEXTBOX
 288
 250
 327
-Red: >95% full
+Red: unbalanced full
 18
 15.0
 1
@@ -261,8 +290,8 @@ TEXTBOX
 20
 339
 170
-361
-Blue: <5% full
+383
+Blue: unbalanced empty
 18
 104.0
 1
@@ -274,7 +303,7 @@ SWITCH
 104
 show-bikes?
 show-bikes?
-1
+0
 1
 -1000
 
@@ -285,28 +314,6 @@ MONITOR
 212
 # bikes active
 count bikes
-1
-1
-11
-
-MONITOR
-162
-327
-253
-372
-# blue stations
-count stations with [available-docks < (total-docks * 0.05)]
-1
-1
-11
-
-MONITOR
-162
-275
-254
-320
-# red stations
-count stations with [available-bikes > (total-docks * 0.95)]
 1
 1
 11
