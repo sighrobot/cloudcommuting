@@ -14,14 +14,14 @@ bikes-own [
 breed [stations station]
 stations-own [
   launch-rate
-  station-id      ; item 1
-  $station-name   ; item 2
-  available-bikes ; item 9
-  available-docks ; item 3
-  total-docks     ; item 4
-  latitude        ; item 5
-  longitude       ; item 6
-  status-key      ; item 8
+  station-id      ; item 0
+  $station-name   ; item 1
+  available-bikes ; item 8
+  available-docks ; item 2
+  total-docks     ; item 3
+  latitude        ; item 4
+  longitude       ; item 5
+  status-key      ; item 7
 ]
 
 globals [
@@ -36,32 +36,46 @@ to setup
   file-close-all
   set lat-values [40.68034242 40.771522 0.09117958]     ; min max range
   set lon-values [-74.01713445 -73.95004798 0.06708647] ; min max range
-  set-default-shape stations "target"
+  set-default-shape stations "circle 2"
   
   file-open "citibike_stations.txt"
   let fl file-read-line
-  reset-ticks
-  loop [
-    ifelse file-at-end? [ stop ] [
+  while [ not file-at-end? ] [
       set $data []
       read-station-data
-      create-ordered-stations 1 [
-        set launch-rate random-float 0.11 + 0.01
-        set station-id item 0 $data
-        set $station-name item 1 $data
-        set available-bikes item 8 $data
-        set available-docks item 2 $data
-        set total-docks item 3 $data
-        set latitude item 4 $data
-        set longitude item 5 $data
-        set status-key item 7 $data
-        let x max-pxcor - ((item 1 lon-values) - longitude) / item 2 lon-values  * (max-pxcor - min-pxcor)
-        let y max-pycor - ((item 1 lat-values) - latitude) / item 2 lat-values * (max-pycor - min-pycor)
-        setxy x y
+      if item 7 $data = 1 [ ; only load stations with status key == 1
+        create-ordered-stations 1 [
+          set launch-rate random-float 0.11 + 0.01
+          set station-id item 0 $data
+          set $station-name item 1 $data
+          set available-bikes item 8 $data
+          set available-docks item 2 $data
+          set total-docks item 3 $data
+          set latitude item 4 $data
+          set longitude item 5 $data
+          set status-key item 7 $data
+          let x max-pxcor - (item 1 lon-values - longitude) / item 2 lon-values  * (max-pxcor - min-pxcor)
+          let y max-pycor - (item 1 lat-values - latitude) / item 2 lat-values * (max-pycor - min-pycor)
+          setxy x y
+        ]
+      ]
+  ]
+  file-close
+  file-open "launch_rates.txt"
+  set fl file-read-line
+  while [ not file-at-end? ] [
+    set $data []
+    read-station-data
+    let a 0
+    ifelse station item 0 $data = nobody [ ] [
+      ask station item 0 $data [
+       set launch-rate item 2 $data
       ]
     ]
   ]
   
+  file-close-all
+  reset-ticks
   
 end
 
@@ -296,6 +310,24 @@ count stations with [available-bikes > (total-docks * 0.95)]
 1
 1
 11
+
+PLOT
+8
+411
+261
+561
+plot 1
+time
+bikes
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count bikes"
 
 @#$#@#$#@
 ## Citi Bike simulator v2.0
