@@ -110,6 +110,9 @@ to go
   ask bikes [
     
     let target-open? false
+
+    
+    
     ask target [ 
       if available-docks > 0 [ set target-open? true ]
     ]
@@ -141,6 +144,7 @@ to go
     ; not yet at target, move forward
     [ fd speed  ]   
     
+    
     ifelse show-bikes? [set color 1 ] [ set color black ] 
   ]
 
@@ -149,6 +153,7 @@ to go
     if available-bikes > 0 [
       if random-float 1 < master-launch-rate [
         hatch-bikes 1 [
+          set target nobody
           while [ target = nobody ] [
             set target one-of stations with [ station-id = one-of launch-table ]
           ]
@@ -306,7 +311,7 @@ SWITCH
 104
 show-bikes?
 show-bikes?
-1
+0
 1
 -1000
 
