@@ -48,7 +48,6 @@ to setup
       read-station-data
       if item 7 $data = 1 [ ; only load stations with status key == 1
         create-ordered-stations 1 [
-          ;set launch-rate random-float 0.11 + 0.01
           set station-id item 0 $data
           set $station-name item 1 $data
           set available-bikes item 8 $data
@@ -73,10 +72,8 @@ to setup
   while [ not file-at-end? ] [
     set $data []
     read-station-data
-    ifelse station item 0 $data = nobody [ ] [
-      ask station item 0 $data [
-       set master-launch-rate item 2 $data / 100.0
-      ]
+    ask stations with [station-id = item 0 $data] [
+      if self != nobody [ set master-launch-rate item 2 $data / 100.0 ]
     ]
   ]
   file-close
@@ -90,13 +87,10 @@ to setup
       set fl file-read-line
     ] [ print error-msg stop ]
     
-    ;let t1 table:make
-    ;set launch-rates t1
     set launch-table []
     while [ not file-at-end? ] [
       set $data []
       read-station-data
-      ;table:put launch-rates item 0 $data item 2 $data
       repeat (item 1 $data) [
         set launch-table lput item 0 $data launch-table
       ]
@@ -152,8 +146,7 @@ to go
           set target one-of stations with [ station-id = one-of launch-table ]
           if target != nobody [
             if target = myself [
-              set heading 180
-              jump 40
+              setxy random-xcor random-ycor
             ]
             face target
             set speed 0.4
@@ -166,7 +159,7 @@ to go
       ]
     ]
     ifelse show-counts?
-    [ set label (word (available-bikes) " bikes / " (available-docks) " docks") ]
+    [ set label (word (available-bikes) " B / " (available-docks) " D") ]
     [ set label "" ]
     set color green
     let capacity available-docks + available-bikes
@@ -197,10 +190,10 @@ end
 GRAPHICS-WINDOW
 271
 10
-834
-976
-14
-24
+911
+709
+16
+17
 19.1
 1
 10
@@ -211,10 +204,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--14
-14
--24
-24
+-16
+16
+-17
+17
 1
 1
 1
@@ -303,7 +296,7 @@ SWITCH
 104
 show-bikes?
 show-bikes?
-0
+1
 1
 -1000
 
