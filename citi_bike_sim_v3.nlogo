@@ -1,7 +1,7 @@
 ; Citi Bike simulator v3
 ; by Abe Rubenstein
 
-; check out self + myself
+; 1.831 is max distance radius for alternate stations
 
 extensions [ table ]
 breed [ bikes bike ]
@@ -9,7 +9,7 @@ bikes-own [
   target
   speed
   target-valid?
-  wait-time
+  time-waiting
 ]
 
 breed [ stations station ]
@@ -31,6 +31,7 @@ globals [
   file-end?
   lat-values
   lon-values
+  nearby-station-radius
 ]
 
 to setup
@@ -39,6 +40,7 @@ to setup
   set lat-values [40.68034242 40.771522 0.09117958]     ; min max range
   set lon-values [-74.01713445 -73.95004798 0.06708647] ; min max range
   set-default-shape stations "target"
+  set nearby-station-radius 1.831 ; about 0.4 mi (8 min walk)
   
   file-open "citibike_stations.txt"
   let fl file-read-line
@@ -107,14 +109,6 @@ to go
   
   ask bikes [
     
-    ifelse show-bikes? [set color 1 ] [ set color black ]
-    
-    if target = nobody [
-      set target one-of stations
-      print "target is nobody"
-    ]
-    
-    
     let target-open? false
     ask target [ 
       if available-docks > 0 [ set target-open? true ]
@@ -130,12 +124,24 @@ to go
         move-to target
         die
       ]
-      [  ] ; wait
+      ; else wait or leave
+      [ 
+        ifelse time-waiting < 100 [ set time-waiting time-waiting + 1 ]
+        [
+          set time-waiting 0
+          set target one-of other stations in-radius nearby-station-radius
+          face target
+          fd speed
+        ]
+        
+      ]
         
        
     ]
     ; not yet at target, move forward
-    [ fd speed  ]    
+    [ fd speed  ]   
+    
+    ifelse show-bikes? [set color 1 ] [ set color black ] 
   ]
 
   ask stations [
@@ -143,13 +149,16 @@ to go
     if available-bikes > 0 [
       if random-float 1 < master-launch-rate [
         hatch-bikes 1 [
-          set target one-of stations with [ station-id = one-of launch-table ]
+          while [ target = nobody ] [
+            set target one-of stations with [ station-id = one-of launch-table ]
+          ]
           if target != nobody [
             if target = myself [
               setxy random-xcor random-ycor
             ]
             face target
             set speed 0.4
+            set time-waiting 0
             set color black
             set label ""
           ]
@@ -162,9 +171,10 @@ to go
     [ set label (word (available-bikes) " B / " (available-docks) " D") ]
     [ set label "" ]
     set color green
+    
     let capacity available-docks + available-bikes
-    if available-docks > (capacity * 0.90) [ set color blue ]
-    if available-bikes > (capacity * 0.90) [ set color red ]
+    if available-docks > (capacity * 0.95) [ set color blue ]
+    if available-bikes > (capacity * 0.95) [ set color red ]
   ]
   
   tick
