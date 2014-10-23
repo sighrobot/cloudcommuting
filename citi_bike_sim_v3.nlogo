@@ -311,7 +311,7 @@ SWITCH
 104
 show-bikes?
 show-bikes?
-0
+1
 1
 -1000
 
